@@ -113,6 +113,7 @@ datos_unificados <- datos_unificados |>
       Nombre == "OBERA AERO" ~ "OBERA",
       Nombre == "VENADO TUERTO" ~ "VENADO TUERTO AERO",
       Nombre == "SAN FERNANDO" ~ "SAN FERNANDO AERO",
+      Nombre == "BUENOS AIRES" ~ "BUENOS AIRES OBSERVATORIO",  
       TRUE ~ Nombre
     )
   )
@@ -147,10 +148,6 @@ nombres_no_relacionados <- datos_unificados |>
 
 # Imprimimos el resultado final
 print(nombres_no_relacionados)
-
-#Vemos que BUENOS AIRES no coincide con ninguno, por lo tanto lo borramos
-datos_unificados <- datos_unificados |>
-  filter(Nombre != "BUENOS AIRES")
 
 #Hacemos una limpieza de las variables que no vamos a volver a usar
 rm(nombres_no_relacionados)
