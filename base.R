@@ -131,6 +131,16 @@ datos_precipitacion <- datos_precipitacion |>
 ruta_estaciones <- "smn_estaciones.csv"
 datos_estaciones <- read_csv(ruta_estaciones)
 
+#Ver datos preciciptaciones glimpse(datos_precipitacion)
+glimpse(datos_precipitacion)
+
+#Ver rangos de Precipitacion (mm)
+summary(datos_precipitacion$`Precipitacion_mm`)
+
+# Borrar datos con /n de precipitacion
+datos_precipitacion <- datos_precipitacion |>
+  filter(`Precipitacion_mm` != "\\N")
+
 # 3. HACEMOS LOS JOINS
 
 # Agrego columna Nro a datos_unificados
@@ -175,6 +185,20 @@ datos_unificados <- datos_unificados |>
     datos_estaciones |> select(Nro, Latitud, Longitud, Altura, Provincia),
     # Esta parte estaba bien, ya que ambos tienen la columna "Nro"
     by = c("Nro" = "Nro")
+  )
+
+#Pasar todos los datos a su tipo de dato predominante y los que son numericos a numericos
+datos_unificados <- datos_unificados |>
+  mutate(
+    Temp = as.numeric(Temp),
+    Hum = as.numeric(Hum),
+    PNM = as.numeric(PNM),
+    DD = as.numeric(DD),
+    FF = as.numeric(FF),
+    Precipitacion_mm = as.numeric(Precipitacion_mm),
+    Latitud = as.numeric(Latitud),
+    Longitud = as.numeric(Longitud),
+    Altura = as.numeric(Altura)
   )
 
 #No se encontraron datos de precipitacion para Antartida
