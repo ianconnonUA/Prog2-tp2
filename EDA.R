@@ -1,170 +1,223 @@
 ## -----------------------------------------------------------------------------
-## SECCIÓN 0: Librerías (Añadimos sf y rnaturalearth)
+## SECCIÓN 0: Librerías Esenciales
 ## -----------------------------------------------------------------------------
+# install.packages(c("tidyverse", "lubridate", "arrow", "leaflet", "plotly", "htmlwidgets"))
+
 library(tidyverse)
 library(lubridate)
 library(arrow)
-library(leaflet)
-library(htmlwidgets)
-library(sf)               # ¡Nueva! Para manejar datos espaciales (mapas)
-library(rnaturalearth)    # ¡Nueva! Para descargar los mapas base
-
-# (Instálalas si no las tienes con: install.packages(c("sf", "rnaturalearth")))
-
-# Paso 1: Instalar el paquete de herramientas 'devtools' desde CRAN
-# install.packages("devtools")
-
-# Paso 2: Usar 'devtools' para instalar el paquete de mapas en alta resolución desde GitHub
-# devtools::install_github("ropensci/rnaturalearthhires")
+library(leaflet)       # Para mapas interactivos
+library(plotly)        # Para gráficos interactivos (barras, líneas)
+library(htmlwidgets)   # Para guardar los gráficos
 
 options(scipen = 999)
 
 ## -----------------------------------------------------------------------------
 ## SECCIÓN 1: Carga de Datos Crudos
 ## -----------------------------------------------------------------------------
+cat("Paso 1: Cargando datos crudos...\n")
 datos_climaticos <- read_parquet("datos_climaticos_unificados.parquet")
+cat("-> Datos crudos cargados.\n")
 
 ## -----------------------------------------------------------------------------
-## SECCIÓN 2: Limpieza de Datos (¡Ahora incluimos la Temperatura!)
+## SECCIÓN 2: Limpieza de Datos (Robusta)
 ## -----------------------------------------------------------------------------
-# Limpiamos precipitación Y temperatura
+cat("Paso 2: Limpiando y transformando datos...\n")
+
 datos_climaticos_limpios <- datos_climaticos |>
-  filter(!is.na(Precipitacion_mm), !is.na(Temp)) |> # Filtramos NAs
+  filter(
+    !is.na(Precipitacion_mm), 
+    !is.na(Temp),
+    !is.na(Hum)
+  ) |>
   mutate(
-    # Corregimos Precipitación (la que ya teníamos)
     Precipitacion_mm_Num = ifelse(
       grepl("\\.", Precipitacion_mm, fixed = TRUE), 
       as.numeric(Precipitacion_mm),
       as.numeric(Precipitacion_mm) / 10
     ),
-    
-    # ¡NUEVO! Corregimos Temperatura (as.numeric suele ser suficiente)
     Temp_Num = as.numeric(Temp),
-    
-    Año = year(Fecha)
+    Hum_Num = as.numeric(Hum),
+    Año = year(Fecha),
+    Mes_Num = month(Fecha),
+    Mes = floor_date(Fecha, "month")
   ) |>
-  # Filtramos NAs creados en la conversión
-  filter(!is.na(Precipitacion_mm_Num), !is.na(Temp_Num))
-
-cat("Datos limpios con Precipitación y Temperatura numéricas.\n")
-
-
-## -----------------------------------------------------------------------------
-## SECCIÓN 3: Resumen Anual por ESTACIÓN (¡Ahora incluimos Temp!)
-## -----------------------------------------------------------------------------
-datos_anuales_estacion <- datos_climaticos_limpios |>
-  group_by(Nro, Año, Provincia, Latitud, Longitud, Altura) |>
-  summarise(
-    Precipitacion_Anual_mm = sum(Precipitacion_mm_Num, na.rm = TRUE),
-    # ¡NUEVO! Calculamos la temperatura media de esa estación para ese año
-    Temperatura_Media_Anual = mean(Temp_Num, na.rm = TRUE),
-    .groups = 'drop' # Buena práctica para evitar problemas
+  filter(
+    !is.na(Precipitacion_mm_Num),
+    !is.na(Temp_Num),
+    !is.na(Hum_Num)
   )
 
-glimpse(datos_anuales_estacion)
-
+cat("-> Datos limpios y listos para usar.\n")
 
 ## -----------------------------------------------------------------------------
-## SECCIÓN 4: Resumen Climatológico por PROVINCIA
+## SECCIÓN 3: Preparación de Resúmenes para Gráficos
 ## -----------------------------------------------------------------------------
-# Ahora creamos el promedio de TODAS las estaciones y AÑOS para cada provincia
-# Esto nos da un solo valor de temperatura promedio por provincia
+cat("Paso 3: Creando resúmenes para los gráficos...\n")
 
-datos_provinciales_promedio <- datos_anuales_estacion |>
+# --- Resumen 1: Totales anuales por estación (necesario para promedios) ---
+datos_anuales_estacion <- datos_climaticos_limpios |>
+  group_by(Nro, Provincia, Latitud, Longitud, Año) |>
+  summarise(Precip_Total_Anual = sum(Precipitacion_mm_Num, na.rm = TRUE),
+            .groups = 'drop')
+
+# --- Resumen 2: Promedio climatológico por Estación (Temp, Hum, Precip) ---
+# (Para los MAPAS)
+datos_estacion_promedio <- datos_climaticos_limpios |>
+  group_by(Nro, Provincia, Latitud, Longitud) |>
+  summarise(
+    Temp_Promedio = mean(Temp_Num, na.rm = TRUE),
+    Hum_Promedio = mean(Hum_Num, na.rm = TRUE),
+    .groups = 'drop'
+  ) |>
+  left_join(
+    datos_anuales_estacion |>
+      group_by(Nro) |>
+      summarise(Precip_Promedio_Anual_Est = mean(Precip_Total_Anual, na.rm = TRUE),
+                .groups = 'drop'),
+    by = "Nro"
+  )
+
+# --- Resumen 3: Promedio climatológico por Provincia ---
+# (Para el GRÁFICO DE HUMEDAD)
+datos_provinciales_promedio <- datos_estacion_promedio |>
+  filter(!is.na(Precip_Promedio_Anual_Est)) |> 
   group_by(Provincia) |>
   summarise(
-    # Usamos la mediana, es más robusta a outliers que el promedio (mean)
-    Temp_Mediana_Prov = median(Temperatura_Media_Anual, na.rm = TRUE)
+    Hum_Mediana_Prov = median(Hum_Promedio, na.rm = TRUE)
+  )
+
+# --- ¡¡CORRECCIÓN AQUÍ!! ---
+# --- Resumen 4: Promedio por Provincia SÓLO PARA 2024 ---
+# (Para el GRÁFICO DE BARRAS DE PRECIPITACIÓN 2024)
+datos_provinciales_2024 <- datos_anuales_estacion |>
+  filter(Año == 2024) |>
+  group_by(Provincia) |>
+  summarise(
+    Precip_Promedio_Anual_2024 = mean(Precip_Total_Anual, na.rm = TRUE)
   ) |>
   ungroup()
 
-# ¡OJO! Paso clave: Estandarizar nombres
-# Tus datos (ej. "CAPITAL FEDERAL") deben coincidir con los del mapa (ej. "Ciudad Autónoma de Buenos Aires")
-datos_provinciales_promedio <- datos_provinciales_promedio |>
-  mutate(
-    # Creamos una nueva columna 'Provincia_Join' para la unión
-    Provincia_Join = recode(
-      Provincia,
-      "CAPITAL FEDERAL" = "Ciudad Autónoma de Buenos Aires",
-      "BUENOS AIRES" = "Buenos Aires",
-      "TIERRA DEL FUEGO" = "Tierra del Fuego, Antártida e Islas del Atlántico Sur",
-      "SANTA FE" = "Santa Fe",
-      "ENTRE RIOS" = "Entre Ríos",
-      "CORDOBA" = "Córdoba",
-      "TUCUMAN" = "Tucumán",
-      "NEUQUEN" = "Neuquén",
-      "RIO NEGRO" = "Río Negro",
-      .default = Provincia # Deja el resto como están (ej: "Jujuy", "Salta")
-    )
-  )
+# --- Resumen 5: Promedio por Día (Temp) ---
+datos_diarios_pais <- datos_climaticos_limpios |>
+  group_by(Fecha) |>
+  summarise(Temp_Media_Pais = mean(Temp_Num, na.rm = TRUE),
+            .groups = 'drop')
 
-## -----------------------------------------------------------------------------
-## SECCIÓN 5: Cargar el Mapa de Argentina y Unir Datos
-## -----------------------------------------------------------------------------
+# --- Resumen 6: Total por Mes (Precip) ---
+datos_mensuales_pais <- datos_climaticos_limpios |>
+  group_by(Mes) |>
+  summarise(Precip_Total_Mensual = sum(Precipitacion_mm_Num, na.rm = TRUE),
+            .groups = 'drop')
 
-# 1. Descargamos las formas de las provincias de Argentina
-# ne_states descarga "states" (provincias)
-argentina_map_sf <- ne_states(country = "Argentina", returnclass = "sf")
-
-# 2. Unimos nuestros datos de temperatura al mapa
-# Usamos la columna 'name' del mapa y nuestra 'Provincia_Join'
-mapa_con_datos <- argentina_map_sf |>
-  left_join(datos_provinciales_promedio, by = c("name" = "Provincia_Join"))
+cat("-> Resúmenes creados (incluyendo el de Precipitación 2024).\n")
 
 
 ## -----------------------------------------------------------------------------
-## SECCIÓN 6: Crear y Guardar el Mapa de Coropletas
+## SECCIÓN 4: Generación de 6 Gráficos Interactivos (HTML)
 ## -----------------------------------------------------------------------------
+cat("Paso 4: Generando 6 archivos HTML...\n")
 
-# 1. Crear paleta de colores (Azul=Frío, Rojo=Caliente)
-pal_temp <- colorNumeric(
-  palette = "RdBu",
-  domain = mapa_con_datos$Temp_Mediana_Prov,
-  reverse = TRUE # Invertimos para que el rojo sea caliente
-)
-
-# 2. Crear el mapa con polígonos
-mapa_coropletas <- leaflet(data = mapa_con_datos) |>
+# --- GRÁFICO 1: Mapa Interactivo de Temperatura (Climatológico) ---
+cat("Generando 1/6: Mapa de Temperaturas (Climatológico)...\n")
+# (Usa datos_estacion_promedio)
+pal_temp <- colorNumeric(palette = "RdBu", domain = datos_estacion_promedio$Temp_Promedio, reverse = TRUE)
+mapa_temp <- leaflet(data = datos_estacion_promedio) |>
   addProviderTiles(providers$CartoDB.Positron) |>
-  
-  # ¡NUEVO! Usamos addPolygons en lugar de addCircleMarkers
-  addPolygons(
-    fillColor = ~pal_temp(Temp_Mediana_Prov), # Color de relleno según la temp
-    fillOpacity = 0.8,         # Transparencia
-    color = "white",           # Color del borde de la provincia
-    weight = 1,                # Ancho del borde
-    
-    # Popup (lo que ves al hacer clic)
-    popup = ~paste(
-      "<strong>Provincia:</strong>", name, "<br>",
-      "<strong>Temp. Mediana:</strong>", round(Temp_Mediana_Prov, 1), " °C"
-    ),
-    
-    # Highlight (lo que pasa al pasar el mouse)
-    highlightOptions = highlightOptions(
-      weight = 3,
-      color = "#666",
-      fillOpacity = 1
-    )
+  addCircleMarkers(
+    lng = ~Longitud, lat = ~Latitud, radius = 4,
+    color = ~pal_temp(Temp_Promedio), stroke = FALSE, fillOpacity = 0.7,
+    popup = ~paste("<strong>Estación:</strong>", Nro, "<br>",
+                   "<strong>Provincia:</strong>", Provincia, "<br>",
+                   "<strong>Temp. Promedio:</strong>", round(Temp_Promedio, 1), "°C")
   ) |>
-  
-  # 3. Agregar la leyenda
-  addLegend(
-    pal = pal_temp,
-    values = ~Temp_Mediana_Prov,
-    opacity = 1,
-    title = "Temp. Mediana (°C)",
-    position = "bottomright"
+  addLegend(pal = pal_temp, values = ~Temp_Promedio, opacity = 1,
+            title = "Temp. (°C)", position = "bottomright") |>
+  fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
+saveWidget(mapa_temp, "1_mapa_temperatura_climatologico.html")
+cat("-> '1_mapa_temperatura_climatologico.html' guardado.\n")
+
+
+# --- GRÁFICO 2: Mapa Interactivo de Precipitación (Climatológico) ---
+cat("Generando 2/6: Mapa de Precipitaciones (Climatológico)...\n")
+# (Usa datos_estacion_promedio)
+pal_precip <- colorNumeric(palette = "YlGnBu", domain = datos_estacion_promedio$Precip_Promedio_Anual_Est)
+mapa_precip <- leaflet(data = datos_estacion_promedio) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~Longitud, lat = ~Latitud, radius = 4,
+    color = ~pal_precip(Precip_Promedio_Anual_Est), stroke = FALSE, fillOpacity = 0.7,
+    popup = ~paste("<strong>Estación:</strong>", Nro, "<br>",
+                   "<strong>Provincia:</strong>", Provincia, "<br>",
+                   "<strong>Precip. Promedio:</strong>", round(Precip_Promedio_Anual_Est, 0), " mm/año")
   ) |>
-  
-  # 4. Centrar el mapa en Argentina
-  fitBounds(
-    lng1 = -73.5, lat1 = -55.5, # Esquina SW
-    lng2 = -53.5, lat2 = -21.5  # Esquina NE
-  )
+  addLegend(pal = pal_precip, values = ~Precip_Promedio_Anual_Est, opacity = 1,
+            title = "Precip. Anual (mm)", position = "bottomright") |>
+  fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
+saveWidget(mapa_precip, "2_mapa_precipitacion_climatologico.html")
+cat("-> '2_mapa_precipitacion_climatologico.html' guardado.\n")
 
-# 3. Mostrar el mapa
-mapa_coropletas
 
-# 4. Guardar en HTML
-saveWidget(mapa_coropletas, "mapa_temperatura_provincias.html")
+# --- GRÁFICO 3: Barras Interactivas de Humedad (Climatológico) ---
+cat("Generando 3/6: Gráfico de Humedad (Climatológico)...\n")
+# (Usa datos_provinciales_promedio)
+fig_humedad <- plot_ly(
+  data = datos_provinciales_promedio,
+  x = ~reorder(Provincia, -Hum_Mediana_Prov),
+  y = ~Hum_Mediana_Prov,
+  type = 'bar', marker = list(color = ~Hum_Mediana_Prov, colorscale = 'Blues'),
+  hovertemplate = ~paste("<b>%{x}</b><br>Humedad: %{y:.1f}%<extra></extra>")
+) |>
+  layout(title = "Humedad Relativa Mediana por Provincia (Climatológico)",
+         xaxis = list(title = "Provincia"), yaxis = list(title = "Humedad Mediana (%)"))
+saveWidget(fig_humedad, "3_grafico_humedad_climatologico.html")
+cat("-> '3_grafico_humedad_climatologico.html' guardado.\n")
+
+
+# --- ¡¡GRÁFICO CORREGIDO!! ---
+# --- GRÁFICO 4: Barras Interactivas de Precipitación (SOLO 2024) ---
+cat("Generando 4/6: Gráfico de Precipitación (SOLO 2024)...\n")
+# (Usa el nuevo resumen datos_provinciales_2024)
+fig_precip_prov_2024 <- plot_ly(
+  data = datos_provinciales_2024,
+  x = ~reorder(Provincia, -Precip_Promedio_Anual_2024),
+  y = ~Precip_Promedio_Anual_2024,
+  type = 'bar', marker = list(color = ~Precip_Promedio_Anual_2024, colorscale = 'YlGnBu'),
+  hovertemplate = ~paste("<b>%{x}</b><br>Precipitación 2024: %{y:.0f} mm<extra></extra>")
+) |>
+  layout(title = "Precipitación Promedio por Provincia (Año 2024)",
+         xaxis = list(title = "Provincia"), yaxis = list(title = "Precipitación Promedio (mm)"))
+saveWidget(fig_precip_prov_2024, "4_grafico_precipitacion_provincias_2024.html")
+cat("-> '4_grafico_precipitacion_provincias_2024.html' guardado.\n")
+
+
+# --- GRÁFICO 5: Línea Interactiva de Temperatura Diaria ---
+cat("Generando 5/6: Gráfico de Temperatura Diaria...\n")
+# (Usa datos_diarios_pais)
+fig_temp_diaria <- plot_ly(
+  data = datos_diarios_pais, x = ~Fecha, y = ~Temp_Media_Pais,
+  type = 'scatter', mode = 'lines', line = list(color = 'darkred', width = 1),
+  hovertemplate = ~paste("<b>%{x}</b><br>Temp. Media: %{y:.1f}°C<extra></extra>")
+) |>
+  layout(title = "Temperatura Media Diaria en Argentina (Promedio de estaciones)",
+         xaxis = list(title = "Fecha"), yaxis = list(title = "Temperatura Media (°C)"))
+saveWidget(fig_temp_diaria, "5_grafico_temperatura_diaria.html")
+cat("-> '5_grafico_temperatura_diaria.html' guardado.\n")
+
+
+# --- GRÁFICO 6: Barras Interactivas de Precipitación Mensual ---
+cat("Generando 6/6: Gráfico de Precipitación Mensual...\n")
+# (Usa datos_mensuales_pais)
+fig_precip_mensual <- plot_ly(
+  data = datos_mensuales_pais, x = ~Mes, y = ~Precip_Total_Mensual,
+  type = 'bar', marker = list(color = 'steelblue'),
+  hovertemplate = ~paste("<b>%{x|%B %Y}</b><br>Precip. Total: %{y:.0f} mm<extra></extra>")
+) |>
+  layout(title = "Precipitación Mensual Total en Argentina (Suma de estaciones)",
+         xaxis = list(title = "Mes", dtick = "M3"), 
+         yaxis = list(title = "Precipitación Total (mm)"))
+saveWidget(fig_precip_mensual, "6_grafico_precipitacion_mensual.html")
+cat("-> '6_grafico_precipitacion_mensual.html' guardado.\n")
+
+
+cat("\n--- ¡PROCESO COMPLETADO! Revisa tu carpeta por los 6 archivos HTML. ---\n")
