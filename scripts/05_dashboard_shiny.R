@@ -23,7 +23,7 @@ library(DT)
 cat("Cargando datos para dashboard...\n")
 
 # Cargar datos procesados
-datos_climaticos <- read_parquet("data/processed/datos_climaticos_unificados_imputados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
 
 # Preparar datos resumidos para mejor performance
 datos_dashboard <- datos_climaticos %>%

@@ -12,12 +12,11 @@ setwd(dirname(getActiveDocumentContext()$path))
 
 # 2. Ejecutar scripts en orden
 scripts <- c(
-  "scripts/01_base_importacion.R",
-  "scripts/02_limpieza.R", 
-  "scripts/03_analisis_exploratorio.R",
-  "scripts/04_visualizaciones.R",
-  "scripts/05_series_temporales.R",
-  "scripts/06_dashboard_shiny.R"
+  "scripts/01_limpieza.R", 
+  "scripts/02_analisis_exploratorio.R",
+  "scripts/03_visualizaciones.R",
+  "scripts/04_series_temporales.R",
+  "scripts/05_dashboard_shiny.R"
 )
 
 for (script in scripts) {
