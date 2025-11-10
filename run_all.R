@@ -2,7 +2,7 @@
 # SCRIPT MAESTRO - EJECUCIÓN COMPLETA DEL PROYECTO
 # =============================================================================
 
-cat("🚀 INICIANDO ANÁLISIS CLIMÁTICO COMPLETO\n")
+cat("🚀 INICIANDO ANÁLISIS CLIMÁTICO\n")
 cat("=========================================\n")
 
 # 1. Configuración inicial
@@ -16,7 +16,8 @@ scripts <- c(
   "scripts/02_limpieza.R", 
   "scripts/03_analisis_exploratorio.R",
   "scripts/04_visualizaciones.R",
-  "scripts/05_series_temporales.R"  
+  "scripts/05_series_temporales.R",
+  "scripts/06_dashboard_shiny.R"
 )
 
 for (script in scripts) {
@@ -32,3 +33,4 @@ for (script in scripts) {
 cat("\n🎉 ANÁLISIS COMPLETADO EXITOSAMENTE!\n")
 cat("📊 Resultados en: outputs/\n")
 cat("📈 Pronósticos en: outputs/pronosticos/\n")
+

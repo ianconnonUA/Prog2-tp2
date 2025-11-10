@@ -1,14 +1,18 @@
 ## -----------------------------------------------------------------------------
 ## SECCIÓN 0: Librerías Esenciales
 ## -----------------------------------------------------------------------------
-# install.packages(c("tidyverse", "lubridate", "arrow", "leaflet", "plotly", "htmlwidgets"))
-
+if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
+if (!require("lubridate")) install.packages("lubridate")
 library(lubridate)
+if (!require("arrow")) install.packages("arrow")
 library(arrow)
-library(leaflet)       # Para mapas interactivos
-library(plotly)        # Para gráficos interactivos (barras, líneas)
-library(htmlwidgets)   # Para guardar los gráficos
+if (!require("leaflet")) install.packages("leaflet")
+library(leaflet)
+if (!require("plotly")) install.packages("plotly")
+library(plotly)   
+if (!require("htmlwidgets")) install.packages("htmlwidgets")
+library(htmlwidgets)
 
 options(scipen = 999)
 
@@ -16,7 +20,7 @@ options(scipen = 999)
 ## SECCIÓN 1: Carga de Datos Crudos
 ## -----------------------------------------------------------------------------
 cat("Paso 1: Cargando datos crudos...\n")
-datos_climaticos <- read_parquet("datos_climaticos_unificados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados.parquet")
 cat("-> Datos crudos cargados.\n")
 
 ## -----------------------------------------------------------------------------

@@ -1,9 +1,16 @@
+if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
+if (!require("lubridate")) install.packages("lubridate")
 library(lubridate)
+if (!require("arrow")) install.packages("arrow")
 library(arrow)
-library(leaflet)       # Para mapas interactivos
-library(plotly)        # Para gráficos interactivos (barras, líneas)
-library(htmlwidgets)   # Para guardar los gráficos
+if (!require("leaflet")) install.packages("leaflet")
+library(leaflet)
+if (!require("plotly")) install.packages("plotly")
+library(plotly)    
+if (!require("htmlwidgets")) install.packages("htmlwidgets")
+library(htmlwidgets) 
+if (!require("ggplot2")) install.packages("ggplot2")
 library(ggplot2)
 
 options(scipen = 999)
@@ -12,7 +19,7 @@ options(scipen = 999)
 ## SECCIÓN 1: Carga de Datos Crudos
 ## -----------------------------------------------------------------------------
 cat("Paso 1: Cargando datos crudos...\n")
-datos_climaticos <- read_parquet("datos_climaticos_unificados_imputados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
 cat("-> Datos crudos cargados.\n")
 
 ## -----------------------------------------------------------------------------
@@ -204,7 +211,7 @@ mapa_temp <- leaflet(data = datos_estacion_promedio) |>
   addLegend(pal = pal_temp, values = ~Temp_Promedio, opacity = 1,
             title = "Temp. (°C)", position = "bottomright") |>
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
-saveWidget(mapa_temp, "1_mapa_temperatura_climatologico.html")
+saveWidget(mapa_temp, "../outputs/graficos/mapas/1_mapa_temperatura_climatologico.html")
 cat("-> '1_mapa_temperatura_climatologico.html' guardado.\n")
 
 mapa_temp
@@ -231,7 +238,7 @@ mapa_precip <- leaflet(data = datos_estacion_promedio) |>
   addLegend(pal = pal_precip, values = ~Precip_Promedio_Anual_Est, opacity = 1,
             title = "Precip. Anual (mm)", position = "bottomright") |>
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
-saveWidget(mapa_precip, "2_mapa_precipitacion_climatologico.html")
+saveWidget(mapa_precip, "../outputs/graficos/mapas/2_mapa_precipitacion_climatologico.html")
 cat("-> '2_mapa_precipitacion_climatologico.html' guardado.\n")
 
 mapa_precip
@@ -273,7 +280,7 @@ mapa_combinado <- leaflet(data = datos_estacion_promedio) |>
   
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
 
-saveWidget(mapa_combinado, "mapa_combinado_temp_precip.html")
+saveWidget(mapa_combinado, "../outputs/graficos/mapas/mapa_combinado_temp_precip.html")
 cat("-> 'mapa_combinado_temp_precip.html' guardado.\n")
 
 mapa_combinado
@@ -291,7 +298,7 @@ fig_humedad <- plot_ly(
 ) |>
   layout(title = "Humedad Relativa Mediana por Provincia (Climatológico)",
          xaxis = list(title = "Provincia"), yaxis = list(title = "Humedad Mediana (%)"))
-saveWidget(fig_humedad, "3_grafico_humedad_climatologico.html")
+saveWidget(fig_humedad, "../outputs/graficos/agroclimaticos/3_grafico_humedad_climatologico.html")
 cat("-> '3_grafico_humedad_climatologico.html' guardado.\n")
 
 fig_humedad
@@ -308,7 +315,7 @@ fig_precip_prov_2024 <- plot_ly(
 ) |>
   layout(title = "Precipitación Promedio por Provincia (Año 2024)",
          xaxis = list(title = "Provincia"), yaxis = list(title = "Precipitación Promedio (mm)"))
-saveWidget(fig_precip_prov_2024, "4_grafico_precipitacion_provincias_2024.html")
+saveWidget(fig_precip_prov_2024, "../outputs/graficos/agroclimaticos/4_grafico_precipitacion_provincias_2024.html")
 cat("-> '4_grafico_precipitacion_provincias_2024.html' guardado.\n")
 
 fig_precip_prov_2024
@@ -323,7 +330,7 @@ fig_temp_diaria <- plot_ly(
 ) |>
   layout(title = "Temperatura Media Diaria en Argentina (Promedio de estaciones)",
          xaxis = list(title = "Fecha"), yaxis = list(title = "Temperatura Media (°C)"))
-saveWidget(fig_temp_diaria, "5_grafico_temperatura_diaria.html")
+saveWidget(fig_temp_diaria, "../outputs/graficos/series_temporales/5_grafico_temperatura_diaria.html")
 cat("-> '5_grafico_temperatura_diaria.html' guardado.\n")
 
 fig_temp_diaria
@@ -339,7 +346,7 @@ fig_precip_mensual <- plot_ly(
   layout(title = "Precipitación Mensual Total en Argentina (Suma de estaciones)",
          xaxis = list(title = "Mes", dtick = "M3"), 
          yaxis = list(title = "Precipitación Total (mm)"))
-saveWidget(fig_precip_mensual, "6_grafico_precipitacion_mensual.html")
+saveWidget(fig_precip_mensual, "../outputs/graficos/series_temporales/6_grafico_precipitacion_mensual.html")
 cat("-> '6_grafico_precipitacion_mensual.html' guardado.\n")
 
 fig_precip_mensual
@@ -365,7 +372,7 @@ mapa_heladas <- leaflet(data = ranking_agro_mapa) |>
   ) |>
   addLegend(pal = pal_heladas, values = ~Dias_Helada_Tardia,
             title = "Días Helada Tardía", position = "bottomright")
-saveWidget(mapa_heladas, "7_mapa_agro_heladas_tardias.html")
+saveWidget(mapa_heladas, "../outputs/graficos/mapas/7_mapa_agro_heladas_tardias.html")
 
 mapa_heladas
 
@@ -388,7 +395,7 @@ mapa_sequia <- leaflet(data = datos_sequia) |>
   ) |>
   addLegend(pal = pal_sequia, values = ~Max_Dias_Sin_Lluvia,
             title = "Máx. Días Consec. Sin Lluvia", position = "bottomright")
-saveWidget(mapa_sequia, "8_mapa_agro_riesgo_sequia.html")
+saveWidget(mapa_sequia, "../outputs/graficos/mapas/8_mapa_agro_riesgo_sequia.html")
 
 mapa_sequia
 
@@ -415,7 +422,7 @@ fig_disp_provincia <- plot_ly(
 
 fig_disp_provincia
 
-saveWidget(fig_disp_provincia, "9_dispersion_provincia.html")
+saveWidget(fig_disp_provincia, "../outputs/graficos/agroclimaticos/9_dispersion_provincia.html")
 
 # --- GRÁFICO 10 (AGRO): Rosa de Vientos Nacional o Regional ---
 ggplot(datos_viento_summary, aes(x = DD_rango, y = n, fill = FF_rango)) +
@@ -446,7 +453,7 @@ mapa_riesgo <- leaflet(data = riesgo_agro) |>
   addLegend(pal = pal_riesgo, values = ~Riesgo_Total,
             title = "Índice de Riesgo Climático", position = "bottomright")
 
-saveWidget(mapa_riesgo, "10_mapa_riesgo_agroclimatico.html")
+saveWidget(mapa_riesgo, "../outputs/graficos/mapas/10_mapa_riesgo_agroclimatico.html")
 mapa_riesgo
 
 # --- GRÁFICO 11 (AGRO): Agroclimáticos y de Riesgo---
@@ -499,7 +506,7 @@ mapa_aptitud <- leaflet(data = datos_aptitud) |>
   ) |>
   addLegend(pal = pal_aptitud, values = ~Aptitud_Final,
             title = "Aptitud Agroclimática", position = "bottomright")
-saveWidget(mapa_aptitud, "CONCLUSION_mapa_aptitud.html")
+saveWidget(mapa_aptitud, "../outputs/graficos/mapas/CONCLUSION_mapa_aptitud.html")
 mapa_aptitud
 
 # --- TOP 15 MEJORES ESTACIONES ---
@@ -522,7 +529,7 @@ fig_top15 <- plot_ly(
     xaxis = list(title = "Índice de Aptitud (0-100)"),
     yaxis = list(title = "")
   )
-saveWidget(fig_top15, "CONCLUSION_ranking_top15.html")
+saveWidget(fig_top15, "../outputs/graficos/agroclimaticos/CONCLUSION_ranking_top15.html")
 fig_top15
 
 
@@ -577,7 +584,7 @@ fig_radar <- fig_radar |>
     legend = list(x = 1, y = 1)
   )
 
-saveWidget(fig_radar, "CONCLUSION_radar_riesgos.html")
+saveWidget(fig_radar, "../outputs/graficos/agroclimaticos/CONCLUSION_radar_riesgos.html")
 fig_radar
 
 ## CONCLUSIÓN FINAL

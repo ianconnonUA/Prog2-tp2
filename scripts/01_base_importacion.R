@@ -203,7 +203,7 @@ datos_unificados <- datos_unificados |>
 
 #No se encontraron datos de precipitacion para Antartida
 
-write_parquet(datos_unificados, "datos_climaticos_unificados.parquet")
+write_parquet(datos_unificados, "../data/processed/datos_climaticos_unificados.parquet")
 
 #Limpieza del entorno para mejor manejo de memoria
 rm(datos_estaciones)
@@ -213,7 +213,7 @@ cat("Archivo 'datos_climaticos_unificados.parquet' creado exitosamente.\n")
 
 
 # Carga del archivo Parquet para verificación
-datos_climaticos <- read_parquet("datos_climaticos_unificados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados.parquet")
 glimpse(datos_climaticos)
 
 #Valores unicos en precipitacion

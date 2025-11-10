@@ -1,15 +1,22 @@
 # =============================================================================
 # DASHBOARD SHINY - ANÁLISIS CLIMÁTICO ARGENTINA
 # =============================================================================
-
+if (!require("shiny")) install.packages("shiny")
 library(shiny)
+if (!require("shinydashboard")) install.packages("shinydashboard")
 library(shinydashboard)
+if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
+if (!require("lubridate")) install.packages("lubridate")
 library(lubridate)
+if (!require("leaflet")) install.packages("leaflet")
 library(leaflet)
+if (!require("plotly")) install.packages("plotly")
 library(plotly)
+if (!require("arrow")) install.packages("arrow")
 library(arrow)
-
+if (!require("DT")) install.packages("DT")
+library(DT)
 # -----------------------------------------------------------------------------
 # 1. CARGA Y PREPARACIÓN DE DATOS
 # -----------------------------------------------------------------------------
@@ -495,4 +502,5 @@ cat("Dashboard Shiny listo para ejecutar.\n")
 cat("Para ejecutar: shiny::runApp('scripts/dashboard.R')\n")
 
 # Ejecutar la aplicación
-# shinyApp(ui, server)
+shinyApp(ui, server)
+

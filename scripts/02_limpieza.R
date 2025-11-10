@@ -1,10 +1,15 @@
 # ============================================================
 # PASO 1: LIBRERÍAS Y CONFIGURACIÓN
 # ============================================================
+if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
+if (!require("fs")) install.packages("fs")
 library(fs)
+if (!require("arrow")) install.packages("arrow")
 library(arrow)
+if (!require("lubridate")) install.packages("lubridate")
 library(lubridate)
+if (!require("ggplot2")) install.packages("ggplot2")
 library(ggplot2)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -13,7 +18,7 @@ options(scipen = 999)
 # ============================================================
 # PASO 2: CARGA DE ARCHIVOS DE TEXTO DEL SMN
 # ============================================================
-# ruta_a_los_datos <- "smn-data"
+# ruta_a_los_datos <- "../data/raw/smn-data"
 # lista_de_archivos <- dir_ls(path = ruta_a_los_datos, regexp = "\\.txt$")
 # 
 # anchos_de_columna <- c(FECHA = 10, HORA = 6, TEMP = 6, HUM = 6, PNM = 6, DD = 6, FF = 6, NOMBRE = 54)
@@ -42,7 +47,7 @@ options(scipen = 999)
 #===========================================================
 # PASO 2.5: Cargar datos unificados desde parquet intermedio
 #===========================================================
-datos_unificados <- read_parquet("datos_climaticos_unificados_crudo.parquet")
+datos_unificados <- read_parquet("../data/processed/datos_climaticos_unificados_crudo.parquet")
 
 # ============================================================
 # PASO 3: LIMPIEZA DE LA COLUMNA 'Nombre'
@@ -73,7 +78,7 @@ datos_unificados <- datos_unificados |>
 # ============================================================
 # PASO 4: CARGA DE DATOS ADICIONALES
 # ============================================================
-datos_precipitacion <- read_csv("smn_precipitaciones-1991-2024/smn_precipitaciones-1991-2024.txt") |> 
+datos_precipitacion <- read_csv("../data/raw/smn_precipitaciones-1991-2024.txt") |> 
   rename(Precipitacion_mm = "Precipitacion (mm)")
 
 summary(datos_precipitacion)
@@ -86,7 +91,7 @@ datos_precipitacion <- datos_precipitacion |>
   mutate(Precipitacion_mm = na_if(Precipitacion_mm, "\\N")) |> 
   mutate(Precipitacion_mm = as.numeric(Precipitacion_mm))
 
-datos_estaciones <- read_csv("smn_estaciones.csv")
+datos_estaciones <- read_csv("../data/raw/smn_estaciones.csv")
 
 summary(datos_estaciones)
 
@@ -181,7 +186,7 @@ print(summary(datos_unificados))
 # ============================================================
 # PASO 8: EXPORTAR Y GUARDAR
 # ============================================================
-write_parquet(datos_unificados, "datos_climaticos_unificados_imputados.parquet")
+write_parquet(datos_unificados, "../data/processsed/datos_climaticos_unificados_imputados.parquet")
 cat("Archivo final creado: datos_climaticos_unificados_imputados.parquet\n")
 
 # ============================================================
