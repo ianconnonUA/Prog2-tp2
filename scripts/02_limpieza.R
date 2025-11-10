@@ -186,7 +186,7 @@ print(summary(datos_unificados))
 # ============================================================
 # PASO 8: EXPORTAR Y GUARDAR
 # ============================================================
-write_parquet(datos_unificados, "../data/processsed/datos_climaticos_unificados_imputados.parquet")
+write_parquet(datos_unificados, "../data/processed/datos_climaticos_unificados_imputados.parquet")
 cat("Archivo final creado: datos_climaticos_unificados_imputados.parquet\n")
 
 # ============================================================
