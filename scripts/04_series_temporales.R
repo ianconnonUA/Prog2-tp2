@@ -22,7 +22,7 @@ options(scipen = 999)
 # 1. CARGA DE DATOS PREPARADOS
 # -----------------------------------------------------------------------------
 cat("Cargando datos limpios...\n")
-datos_climaticos <- read_parquet("./data/processed/datos_climaticos_unificados_imputados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
 
 # -----------------------------------------------------------------------------
 # 2. PREPARACIÓN DE DATOS PARA SERIES TEMPORALES
@@ -162,7 +162,7 @@ fig_pronostico_temp <- plot_ly() %>%
     yaxis = list(title = "Temperatura (°C)")
   )
 
-saveWidget(fig_pronostico_temp, "./outputs/graficos/series_temporales/pronostico_temperatura_12meses.html")
+saveWidget(fig_pronostico_temp, "../outputs/graficos/series_temporales/pronostico_temperatura_12meses.html")
 cat("-> 'pronostico_temperatura_12meses.html' guardado.\n")
 
 # -----------------------------------------------------------------------------
@@ -217,7 +217,7 @@ fig_pronostico_precip <- plot_ly() %>%
     yaxis = list(title = "Precipitación (mm)")
   )
 
-saveWidget(fig_pronostico_precip, "./outputs/graficos/series_temporales/pronostico_precipitacion_12meses.html")
+saveWidget(fig_pronostico_precip, "../outputs/graficos/series_temporales/pronostico_precipitacion_12meses.html")
 cat("-> 'pronostico_precipitacion_12meses.html' guardado.\n")
 
 # -----------------------------------------------------------------------------
@@ -281,11 +281,11 @@ print(metricas_resumen)
 cat("Exportando resultados...\n")
 
 # Guardar pronósticos
-write_parquet(forecast_temp, "./outputs/pronosticos/pronostico_temperatura_completo.parquet")
-write_parquet(forecast_precip, "./outputs/pronosticos/pronostico_precipitacion_completo.parquet")
+write_parquet(forecast_temp, "../outputs/pronosticos/pronostico_temperatura_completo.parquet")
+write_parquet(forecast_precip, "../outputs/pronosticos/pronostico_precipitacion_completo.parquet")
 
 # Guardar métricas
-write_csv(metricas_resumen, "./outputs/tablas/metricas_modelos_series_temporales.csv")
+write_csv(metricas_resumen, "../outputs/tablas/metricas_modelos_series_temporales.csv")
 
 # -----------------------------------------------------------------------------
 # 10. ANÁLISIS DE TENDENCIAS
@@ -312,7 +312,7 @@ fig_tendencia <- plot_ly(tendencia_anual_temp, x = ~año, y = ~temp_media_anual,
          xaxis = list(title = "Año"),
          yaxis = list(title = "Temperatura Media (°C)"))
 
-saveWidget(fig_tendencia, "./outputs/graficos/series_temporales/tendencia_temperatura_anual.html")
+saveWidget(fig_tendencia, "../outputs/graficos/series_temporales/tendencia_temperatura_anual.html")
 
 cat("-> Análisis de series temporales COMPLETADO\n")
 cat("-> Archivos generados:\n")
@@ -320,3 +320,4 @@ cat("   - pronostico_temperatura_12meses.html\n")
 cat("   - pronostico_precipitacion_12meses.html\n")
 cat("   - tendencia_temperatura_anual.html\n")
 cat("   - metricas_modelos_series_temporales.csv\n")
+
