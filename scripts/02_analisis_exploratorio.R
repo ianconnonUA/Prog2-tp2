@@ -20,7 +20,7 @@ options(scipen = 999)
 ## SECCIÓN 1: Carga de Datos Crudos
 ## -----------------------------------------------------------------------------
 cat("Paso 1: Cargando datos crudos...\n")
-datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados.parquet")
+datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
 cat("-> Datos crudos cargados.\n")
 
 ## -----------------------------------------------------------------------------
