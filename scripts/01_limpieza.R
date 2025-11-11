@@ -17,6 +17,25 @@ library(stringr)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 options(scipen = 999)
 
+## ============================================================
+# PASO 1: LIBRERÍAS Y CONFIGURACIÓN
+# ============================================================
+# (Tu código - sin cambios)
+if (!require("tidyverse")) install.packages("tidyverse")
+library(tidyverse)
+if (!require("fs")) install.packages("fs")
+library(fs)
+if (!require("arrow")) install.packages("arrow")
+library(arrow)
+if (!require("lubridate")) install.packages("lubridate")
+library(lubridate)
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+if(!require("stringr")) install.packages("stringr")
+library(stringr)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+options(scipen = 999)
+
 # ============================================================
 # PASO 2: FUNCIÓN DE CARGA DE DATOS SMN (FWF)
 # ============================================================
@@ -328,7 +347,7 @@ cat("Limpieza de outliers finalizada (convertidos a NA).\n")
 cat("Iniciando imputación de NAs...\n")
 
 # Variables a imputar (excluimos Hum porque ya no existe)
-vars_imputar <- c("Temp", "DD", "FF", "Precipitacion_mm", "PNM")
+vars_imputar <- c("Temp", "Precipitacion_mm", "PNM")
 
 # --- 1. Imputación por Estación y Mes ---
 datos_imputados <- datos_finales |>
@@ -350,12 +369,12 @@ datos_imputados <- datos_imputados |>
   ungroup()
 
 # # --- 3. Eliminación de filas con NAs restantes (Menos Antartida) ---
-datos_imputados <- datos_imputados |>
-  filter(!(Provincia != "ANTARTIDA" & (
-    is.na(Temp) | is.na(DD) | is.na(FF) | is.na(Precipitacion_mm) | is.na(PNM)
-  )))
-
-cat("Imputación finalizada.\n")
+# datos_imputados <- datos_imputados |>
+#   filter(!(Provincia != "ANTARTIDA" & (
+#     is.na(Temp) | is.na(Precipitacion_mm) | is.na(PNM)
+#   )))
+# 
+# cat("Imputación finalizada.\n")
 
 # ============================================================
 # PASO 10: EXPORTAR Y GUARDAR

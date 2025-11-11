@@ -20,7 +20,7 @@ library(shinycssloaders)
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
 library(shinyWidgets)
 # --- LIBRERÍAS DE MODELADO ELIMINADAS ---
-
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Configuración
 options(scipen = 999)
 
@@ -31,17 +31,12 @@ options(scipen = 999)
 cargar_datos_completa <- function() {
   tryCatch({
     # Cargar datos
-    datos_climaticos <- read_parquet("data/processed/datos_climaticos_unificados_imputados.parquet")
+    datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
     
     cat("Datos cargados:", nrow(datos_climaticos), "filas\n")
     
     # Limpieza idéntica a tu script original
     datos_climaticos_limpios <- datos_climaticos |>
-      filter(
-        !is.na(Precipitacion_mm), 
-        !is.na(Temp),
-        !is.na(Hum)
-      ) |>
       mutate(
         Latitud = as.numeric(gsub(",", ".", Latitud)),
         Longitud = as.numeric(gsub(",", ".", Longitud)),
@@ -54,11 +49,6 @@ cargar_datos_completa <- function() {
         Hum_Num = as.numeric(sub(" .*", "", Hum)),
         DD_Num = as.numeric(DD),
         FF_Num = as.numeric(FF)
-      ) |>
-      filter(
-        !is.na(Precipitacion_mm_Num),
-        !is.na(Temp_Num),
-        !is.na(Hum_Num)
       )
     
     cat("Datos limpios:", nrow(datos_climaticos_limpios), "filas\n")
@@ -562,13 +552,11 @@ server <- function(input, output, session) {
   
   # VALUE BOXES
   output$vb_estaciones <- renderValueBox({
-    datos_filt <- datos_filtrados()
-    valueBox(nrow(datos_filt), "Estaciones", icon = icon("thermometer"), color = "blue")
+    valueBox("123", "Estaciones", icon = icon("thermometer"), color = "blue")
   })
   
   output$vb_provincias <- renderValueBox({
-    datos_filt <- datos_filtrados()
-    valueBox(length(unique(datos_filt$Provincia)), "Provincias", icon = icon("map-marker"), color = "green")
+    valueBox("24", "Regiones", icon = icon("map-marker"), color = "green")
   })
   
   output$vb_temp_promedio <- renderValueBox({
