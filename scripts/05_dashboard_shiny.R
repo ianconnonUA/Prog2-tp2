@@ -19,6 +19,7 @@ if (!require("shinycssloaders")) install.packages("shinycssloaders")
 library(shinycssloaders)
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
 library(shinyWidgets)
+# --- LIBRERÍAS DE MODELADO ELIMINADAS ---
 
 # Configuración
 options(scipen = 999)
@@ -30,7 +31,7 @@ options(scipen = 999)
 cargar_datos_completa <- function() {
   tryCatch({
     # Cargar datos
-    datos_climaticos <- read_parquet("../data/processed/datos_climaticos_unificados_imputados.parquet")
+    datos_climaticos <- read_parquet("data/processed/datos_climaticos_unificados_imputados.parquet")
     
     cat("Datos cargados:", nrow(datos_climaticos), "filas\n")
     
@@ -264,6 +265,8 @@ cargar_datos_completa <- function() {
       aptitud_provincial_cultivo = aptitud_provincial_cultivo,
       provincias_alta_aptitud = provincias_alta_aptitud,
       
+      datos_climaticos_limpios = datos_climaticos_limpios,
+      
       carga_exitosa = TRUE
     ))
     
@@ -273,12 +276,18 @@ cargar_datos_completa <- function() {
   })
 }
 
+# --- FUNCIÓN cargar_modelos ELIMINADA ---
+
+
 # Cargar datos
 datos <- cargar_datos_completa()
 
 if (!datos$carga_exitosa) {
   stop("Error cargando datos: ", datos$error)
 }
+
+# --- LLAMADA a cargar_modelos ELIMINADA ---
+
 
 # -----------------------------------------------------------------------------
 # 2. UI - DASHBOARD COMPLETO CON FILTROS
@@ -300,7 +309,9 @@ sidebar <- dashboardSidebar(
     menuItem("Análisis Agroclimático", tabName = "agro", icon = icon("leaf")),
     menuItem("Riesgo Climático", tabName = "riesgo", icon = icon("exclamation-triangle")),
     menuItem("Aptitud Agroclimática", tabName = "aptitud", icon = icon("seedling")),
+    # --- menuItem de Pronósticos ELIMINADO ---
     menuItem("Datos", tabName = "datos", icon = icon("database")),
+    
     
     br(),
     div(style = "padding: 10px;",
@@ -516,7 +527,9 @@ body <- dashboardBody(
           withSpinner(DT::dataTableOutput("tabla_datos", height = "700px"))
         )
       )
-    )
+    ) # --- Coma eliminada, este es el último tabItem ---
+    
+    # --- tabItem de Pronósticos ELIMINADO ---
   )
 )
 
@@ -954,28 +967,66 @@ server <- function(input, output, session) {
       )
   })
   
+  # --- ESTE ES EL GRÁFICO QUE QUERÍAS MANTENER ---
   output$bar_alta_aptitud <- renderPlotly({
-    datos_filt <- datos$provincias_alta_aptitud
     
+    # 1. Usar la tabla que YA CONTIENE aptitud media y los 3 cultivos
+    datos_filt <- datos$aptitud_provincial_cultivo %>%
+      
+      # 2. Convertir a formato largo para poder comparar
+      pivot_longer(
+        cols = c(Soja, Maiz, Trigo), 
+        names_to = "Cultivo", 
+        values_to = "Aptitud_Cultivo"
+      ) %>%
+      
+      # 3. Agrupar por provincia, manteniendo la Aptitud_Media
+      group_by(Provincia, Aptitud_Media) %>%
+      
+      # 4. Encontrar el cultivo con el puntaje más alto
+      slice_max(order_by = Aptitud_Cultivo, n = 1, with_ties = FALSE) %>%
+      ungroup() %>%
+      
+      # 5. AHORA filtrar por las provincias con > 30%
+      filter(Aptitud_Media > 30) %>%
+      
+      # 6. Renombrar para que el gráfico sea más fácil de leer
+      rename(
+        Mejor_Cultivo = Cultivo,
+        Mejor_Aptitud = Aptitud_Cultivo
+      )
+    
+    # Si después de filtrar no queda nada, mostrar mensaje
     if (nrow(datos_filt) == 0) {
       return(plotly_empty(type = "bar") %>% 
-               layout(title = "No hay provincias con alta aptitud"))
+               layout(title = "No hay provincias con alta aptitud (> 30%)"))
     }
     
+    # El resto del código del gráfico funciona igual que antes
     plot_ly(
       data = datos_filt,
       x = ~Aptitud_Media,
       y = ~reorder(Provincia, Aptitud_Media),
       type = 'bar',
       orientation = 'h',
-      marker = list(color = 'orange'),
-      text = ~paste("Aptitud:", round(Aptitud_Media, 1), "%"),
+      
+      # Colorear por el mejor cultivo
+      color = ~Mejor_Cultivo, 
+      colors = c("Soja" = "#1f77b4", "Maiz" = "#ff7f0e", "Trigo" = "#2ca02c"),
+      
+      # Actualizar el texto del hover (tooltip)
+      text = ~paste(
+        "Aptitud Media:", round(Aptitud_Media, 1), "%<br>",
+        "<b>Mejor Cultivo:</b>", Mejor_Cultivo, 
+        "(", round(Mejor_Aptitud, 1), "%)"
+      ),
       hoverinfo = 'text'
     ) %>%
       layout(
-        title = "Provincias con Alta Aptitud (>30%)",
+        title = "Provincias con Alta Aptitud (>30%) y Mejor Cultivo",
         xaxis = list(title = "Aptitud Media (%)", range = c(0, 100)),
         yaxis = list(title = "", automargin = TRUE),
+        legend = list(title = list(text='Mejor Cultivo')),
         margin = list(l = 150, r = 50, b = 50, t = 50, pad = 4)
       )
   })
@@ -1025,6 +1076,8 @@ server <- function(input, output, session) {
       )
     )
   })
+  
+  # --- SECCIÓN DE OUTPUTS DE MODELADO ELIMINADA ---
 }
 
 # -----------------------------------------------------------------------------
