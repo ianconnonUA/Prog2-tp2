@@ -350,10 +350,10 @@ datos_imputados <- datos_imputados |>
   ungroup()
 
 # # --- 3. Eliminación de filas con NAs restantes (Menos Antartida) ---
-# datos_imputados <- datos_imputados |>
-#   filter(!(Provincia != "ANTARTIDA" & (
-#     is.na(Temp) | is.na(DD) | is.na(FF) | is.na(Precipitacion_mm) | is.na(PNM)
-#   )))
+datos_imputados <- datos_imputados |>
+  filter(!(Provincia != "ANTARTIDA" & (
+    is.na(Temp) | is.na(DD) | is.na(FF) | is.na(Precipitacion_mm) | is.na(PNM)
+  )))
 
 cat("Imputación finalizada.\n")
 
