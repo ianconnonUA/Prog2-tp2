@@ -12,6 +12,8 @@ if (!require("htmlwidgets")) install.packages("htmlwidgets")
 library(htmlwidgets) 
 if (!require("ggplot2")) install.packages("ggplot2")
 library(ggplot2)
+if (!require("htmltools")) install.packages("htmltools")
+library(htmltools)
 
 options(scipen = 999)
 
@@ -19,7 +21,7 @@ options(scipen = 999)
 ## SECCIÓN 1: Carga de Datos Crudos
 ## -----------------------------------------------------------------------------
 cat("Paso 1: Cargando datos crudos...\n")
-datos_climaticos <- read_parquet("./data/processed/datos_climaticos_unificados_imputados.parquet")
+datos_climaticos <- read_parquet(".../data/processed/datos_climaticos_unificados_imputados.parquet")
 cat("-> Datos crudos cargados.\n")
 
 ## -----------------------------------------------------------------------------
@@ -109,6 +111,7 @@ datos_diarios_pais <- datos_climaticos_limpios |>
 
 # --- Resumen 6: Total por Mes (Precip) ---
 datos_mensuales_pais <- datos_climaticos_limpios |>
+  mutate(Mes = month(Fecha, label = TRUE)) |>
   group_by(Mes) |>
   summarise(Precip_Total_Mensual = sum(Precipitacion_mm_Num, na.rm = TRUE),
             .groups = 'drop')
@@ -211,7 +214,7 @@ mapa_temp <- leaflet(data = datos_estacion_promedio) |>
   addLegend(pal = pal_temp, values = ~Temp_Promedio, opacity = 1,
             title = "Temp. (°C)", position = "bottomright") |>
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
-saveWidget(mapa_temp, "./outputs/graficos/mapas/1_mapa_temperatura_climatologico.html")
+saveWidget(mapa_temp, "../outputs/graficos/mapas/1_mapa_temperatura_climatologico.html")
 cat("-> '1_mapa_temperatura_climatologico.html' guardado.\n")
 
 mapa_temp
@@ -238,7 +241,7 @@ mapa_precip <- leaflet(data = datos_estacion_promedio) |>
   addLegend(pal = pal_precip, values = ~Precip_Promedio_Anual_Est, opacity = 1,
             title = "Precip. Anual (mm)", position = "bottomright") |>
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
-saveWidget(mapa_precip, "./outputs/graficos/mapas/2_mapa_precipitacion_climatologico.html")
+saveWidget(mapa_precip, "../outputs/graficos/mapas/2_mapa_precipitacion_climatologico.html")
 cat("-> '2_mapa_precipitacion_climatologico.html' guardado.\n")
 
 mapa_precip
@@ -280,7 +283,7 @@ mapa_combinado <- leaflet(data = datos_estacion_promedio) |>
   
   fitBounds(lng1 = -73.5, lat1 = -55.5, lng2 = -53.5, lat2 = -21.5)
 
-saveWidget(mapa_combinado, "./outputs/graficos/mapas/mapa_combinado_temp_precip.html")
+saveWidget(mapa_combinado, "../outputs/graficos/mapas/mapa_combinado_temp_precip.html")
 cat("-> 'mapa_combinado_temp_precip.html' guardado.\n")
 
 mapa_combinado
@@ -298,7 +301,7 @@ fig_humedad <- plot_ly(
 ) |>
   layout(title = "Humedad Relativa Mediana por Provincia (Climatológico)",
          xaxis = list(title = "Provincia"), yaxis = list(title = "Humedad Mediana (%)"))
-saveWidget(fig_humedad, "./outputs/graficos/agroclimaticos/3_grafico_humedad_climatologico.html")
+saveWidget(fig_humedad, "../outputs/graficos/agroclimaticos/3_grafico_humedad_climatologico.html")
 cat("-> '3_grafico_humedad_climatologico.html' guardado.\n")
 
 fig_humedad
@@ -315,7 +318,7 @@ fig_precip_prov_2024 <- plot_ly(
 ) |>
   layout(title = "Precipitación Promedio por Provincia (Año 2024)",
          xaxis = list(title = "Provincia"), yaxis = list(title = "Precipitación Promedio (mm)"))
-saveWidget(fig_precip_prov_2024, "./outputs/graficos/agroclimaticos/4_grafico_precipitacion_provincias_2024.html")
+saveWidget(fig_precip_prov_2024, "../outputs/graficos/agroclimaticos/4_grafico_precipitacion_provincias_2024.html")
 cat("-> '4_grafico_precipitacion_provincias_2024.html' guardado.\n")
 
 fig_precip_prov_2024
@@ -330,7 +333,7 @@ fig_temp_diaria <- plot_ly(
 ) |>
   layout(title = "Temperatura Media Diaria en Argentina (Promedio de estaciones)",
          xaxis = list(title = "Fecha"), yaxis = list(title = "Temperatura Media (°C)"))
-saveWidget(fig_temp_diaria, "./outputs/graficos/series_temporales/5_grafico_temperatura_diaria.html")
+saveWidget(fig_temp_diaria, "../outputs/graficos/series_temporales/5_grafico_temperatura_diaria.html")
 cat("-> '5_grafico_temperatura_diaria.html' guardado.\n")
 
 fig_temp_diaria
@@ -346,7 +349,7 @@ fig_precip_mensual <- plot_ly(
   layout(title = "Precipitación Mensual Total en Argentina (Suma de estaciones)",
          xaxis = list(title = "Mes", dtick = "M3"), 
          yaxis = list(title = "Precipitación Total (mm)"))
-saveWidget(fig_precip_mensual, "./outputs/graficos/series_temporales/6_grafico_precipitacion_mensual.html")
+saveWidget(fig_precip_mensual, "../outputs/graficos/series_temporales/6_grafico_precipitacion_mensual.html")
 cat("-> '6_grafico_precipitacion_mensual.html' guardado.\n")
 
 fig_precip_mensual
@@ -372,7 +375,7 @@ mapa_heladas <- leaflet(data = ranking_agro_mapa) |>
   ) |>
   addLegend(pal = pal_heladas, values = ~Dias_Helada_Tardia,
             title = "Días Helada Tardía", position = "bottomright")
-saveWidget(mapa_heladas, "./outputs/graficos/mapas/7_mapa_agro_heladas_tardias.html")
+saveWidget(mapa_heladas, "../outputs/graficos/mapas/7_mapa_agro_heladas_tardias.html")
 
 mapa_heladas
 
@@ -395,7 +398,7 @@ mapa_sequia <- leaflet(data = datos_sequia) |>
   ) |>
   addLegend(pal = pal_sequia, values = ~Max_Dias_Sin_Lluvia,
             title = "Máx. Días Consec. Sin Lluvia", position = "bottomright")
-saveWidget(mapa_sequia, "./outputs/graficos/mapas/8_mapa_agro_riesgo_sequia.html")
+saveWidget(mapa_sequia, "../outputs/graficos/mapas/8_mapa_agro_riesgo_sequia.html")
 
 mapa_sequia
 
@@ -422,7 +425,7 @@ fig_disp_provincia <- plot_ly(
 
 fig_disp_provincia
 
-saveWidget(fig_disp_provincia, "./outputs/graficos/agroclimaticos/9_dispersion_provincia.html")
+saveWidget(fig_disp_provincia, "../outputs/graficos/agroclimaticos/9_dispersion_provincia.html")
 
 # --- GRÁFICO 10 (AGRO): Rosa de Vientos Nacional o Regional ---
 ggplot(datos_viento_summary, aes(x = DD_rango, y = n, fill = FF_rango)) +
@@ -453,7 +456,7 @@ mapa_riesgo <- leaflet(data = riesgo_agro) |>
   addLegend(pal = pal_riesgo, values = ~Riesgo_Total,
             title = "Índice de Riesgo Climático", position = "bottomright")
 
-saveWidget(mapa_riesgo, "./outputs/graficos/mapas/10_mapa_riesgo_agroclimatico.html")
+saveWidget(mapa_riesgo, "../outputs/graficos/mapas/10_mapa_riesgo_agroclimatico.html")
 mapa_riesgo
 
 # --- GRÁFICO 11 (AGRO): Agroclimáticos y de Riesgo---
@@ -506,7 +509,7 @@ mapa_aptitud <- leaflet(data = datos_aptitud) |>
   ) |>
   addLegend(pal = pal_aptitud, values = ~Aptitud_Final,
             title = "Aptitud Agroclimática", position = "bottomright")
-saveWidget(mapa_aptitud, "./outputs/graficos/mapas/CONCLUSION_mapa_aptitud.html")
+saveWidget(mapa_aptitud, "../outputs/graficos/mapas/CONCLUSION_mapa_aptitud.html")
 mapa_aptitud
 
 # --- TOP 15 MEJORES ESTACIONES ---
@@ -529,7 +532,7 @@ fig_top15 <- plot_ly(
     xaxis = list(title = "Índice de Aptitud (0-100)"),
     yaxis = list(title = "")
   )
-saveWidget(fig_top15, "./outputs/graficos/agroclimaticos/CONCLUSION_ranking_top15.html")
+saveWidget(fig_top15, "../outputs/graficos/agroclimaticos/CONCLUSION_ranking_top15.html")
 fig_top15
 
 
@@ -584,10 +587,137 @@ fig_radar <- fig_radar |>
     legend = list(x = 1, y = 1)
   )
 
-saveWidget(fig_radar, "./outputs/graficos/agroclimaticos/CONCLUSION_radar_riesgos.html")
+saveWidget(fig_radar, "../outputs/graficos/agroclimaticos/CONCLUSION_radar_riesgos.html")
 fig_radar
 
 ## CONCLUSIÓN FINAL
 #Para máxima seguridad climática: Misiones (específicamente zonas como Bernardo de Irigoyen).
 #Para gran escala con riesgo moderado: El centro y sur de Buenos Aires siguen siendo la apuesta más segura por extensión y calidad de suelo (aunque este análisis es puramente climático).
 #Zonas a evitar para cultivos sensibles: Chubut (por heladas) y zonas centrales muy específicas con alto riesgo de calor si no hay agua asegurada.
+
+## --------------------------------------------------------------------------
+## MEJORES LUGARES PARA LOS PRINCIPALES CULTIVOS DE ARGENTINA 
+## --------------------------------------------------------------------------
+
+# --- FUNCIONES AUXILIARES ---
+calc_ciclo <- function(data, meses_ciclo) {
+  data |>
+    filter(month(Fecha) %in% meses_ciclo) |>
+    group_by(Nro, Nombre, Provincia, Latitud, Longitud, Año = year(Fecha)) |>
+    summarise(
+      Precip_Ciclo = sum(Precipitacion_mm_Num, na.rm = TRUE),
+      Temp_Media_Ciclo = mean(Temp_Num, na.rm = TRUE),
+      .groups = 'drop_last' # Mantiene agrupación por estación para el siguiente summarise
+    ) |>
+    summarise( # Promedio climatológico del ciclo
+      Precip_Media_Ciclo = mean(Precip_Ciclo, na.rm = TRUE),
+      Temp_Media_Ciclo_Prom = mean(Temp_Media_Ciclo, na.rm = TRUE),
+      .groups = 'drop'
+    )
+}
+
+# --- CÁLCULO DE DATOS POR CULTIVO ---
+
+# 1. SOJA (Nov-Abr)
+datos_soja <- calc_ciclo(datos_climaticos_limpios, c(11, 12, 1, 2, 3, 4)) |>
+  mutate(
+    Score_Temp_Soja = 1 - pmin(abs(Temp_Media_Ciclo_Prom - 25) / 10, 1), # Óptimo 25°C, +/- 10°C tolerancia
+    Score_Precip_Soja = pmin(pmax((Precip_Media_Ciclo - 300) / (800 - 300), 0), 1), # Rampa de 300 a 800mm
+    Aptitud_Soja = (Score_Temp_Soja * 0.4 + Score_Precip_Soja * 0.6) * 100
+  )
+
+# 2. MAÍZ (Oct-Mar) - Similar a Soja pero quizás más exigente en agua
+datos_maiz <- calc_ciclo(datos_climaticos_limpios, c(10, 11, 12, 1, 2, 3)) |>
+  mutate(
+    Score_Temp_Maiz = 1 - pmin(abs(Temp_Media_Ciclo_Prom - 24) / 10, 1), # Óptimo ~24°C
+    Score_Precip_Maiz = pmin(pmax((Precip_Media_Ciclo - 400) / (900 - 400), 0), 1), # Rampa de 400 a 900mm
+    Aptitud_Maiz = (Score_Temp_Maiz * 0.4 + Score_Precip_Maiz * 0.6) * 100
+  )
+
+# 3. TRIGO (Jun-Dic) - Cultivo de invierno
+datos_trigo <- calc_ciclo(datos_climaticos_limpios, c(6, 7, 8, 9, 10, 11, 12)) |>
+  mutate(
+    Score_Temp_Trigo = 1 - pmin(abs(Temp_Media_Ciclo_Prom - 15) / 8, 1), # Óptimo 15°C, rango más estrecho
+    Score_Precip_Trigo = 1 - pmin(abs(Precip_Media_Ciclo - 450) / 300, 1), # Óptimo 450mm, penaliza exceso y falta
+    Aptitud_Trigo = (Score_Temp_Trigo * 0.5 + Score_Precip_Trigo * 0.5) * 100
+  )
+
+# ---RESUMEN DE MEJORES LUGARES PARA CULTIVAR---
+resumen_cultivos_prov <- datos_soja |>
+  select(Nro, Provincia, Aptitud_Soja) |>
+  left_join(datos_maiz |> select(Nro, Aptitud_Maiz), by = "Nro") |>
+  left_join(datos_trigo |> select(Nro, Aptitud_Trigo), by = "Nro") |>
+  group_by(Provincia) |>
+  summarise(
+    Soja = mean(Aptitud_Soja, na.rm = TRUE),
+    Maiz = mean(Aptitud_Maiz, na.rm = TRUE),
+    Trigo = mean(Aptitud_Trigo, na.rm = TRUE),
+    .groups = 'drop'
+  ) |>
+  pivot_longer(cols = c(Soja, Maiz, Trigo), names_to = "Cultivo", values_to = "Aptitud_Media")
+
+gg_cultivos <- ggplot(resumen_cultivos_prov, aes(x = reorder(Provincia, -Aptitud_Media), y = Aptitud_Media, fill = Cultivo)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Soja" = "#E69F00", "Maiz" = "#56B4E9", "Trigo" = "#009E73")) +
+  labs(title = "Aptitud Agroclimática Promedio por Provincia y Cultivo",
+       x = "Provincia", y = "Índice de Aptitud Promedio (0-100)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+fig_cultivos <- ggplotly(gg_cultivos)
+saveWidget(fig_cultivos, "../outputs/graficos/agroclimaticos/comparativa_cultivos_provincias.html")
+fig_cultivos
+
+
+# ---MAPA MEJORES PROVINCIAS---
+UMBRAL_OPTIMO <- 30
+
+datos_provinciales_optimos <- datos_soja |>
+  select(Nro, Provincia, Aptitud_Soja) |>
+  left_join(datos_maiz |> select(Nro, Aptitud_Maiz), by = "Nro") |>
+  left_join(datos_trigo |> select(Nro, Aptitud_Trigo), by = "Nro") |>
+  group_by(Provincia) |>
+  summarise(
+    Soja = mean(Aptitud_Soja, na.rm = TRUE),
+    Maiz = mean(Aptitud_Maiz, na.rm = TRUE),
+    Trigo = mean(Aptitud_Trigo, na.rm = TRUE),
+    Lat = mean(datos_climaticos_limpios$Latitud[datos_climaticos_limpios$Provincia == first(Provincia)], na.rm=TRUE),
+    Long = mean(datos_climaticos_limpios$Longitud[datos_climaticos_limpios$Provincia == first(Provincia)], na.rm=TRUE),
+    .groups = 'drop'
+  ) |>
+  filter(Soja >= UMBRAL_OPTIMO | Maiz >= UMBRAL_OPTIMO | Trigo >= UMBRAL_OPTIMO) |>
+  rowwise() |>
+  mutate(
+    popup_html = HTML(paste0(
+      "<div style='font-size: 14px; line-height: 1.5;'>",
+      "<h3 style='margin-bottom: 5px;'>", Provincia, "</h3>",
+      "<strong>Cultivos con Aptitud >", UMBRAL_OPTIMO, "%:</strong><br>",
+      ifelse(Soja >= UMBRAL_OPTIMO,  paste0("🌱 Soja: <b>", round(Soja, 1), "%</b><br>"), ""),
+      ifelse(Maiz >= UMBRAL_OPTIMO,  paste0("🌽 Maíz: <b>", round(Maiz, 1), "%</b><br>"), ""),
+      ifelse(Trigo >= UMBRAL_OPTIMO, paste0("🌾 Trigo: <b>", round(Trigo, 1), "%</b><br>"), ""),
+      "</div>"
+    ))
+  ) |>
+  ungroup()
+
+cat("Número de provincias tras filtrar (con UMBRAL_OPTIMO =", UMBRAL_OPTIMO, "%):", nrow(datos_provinciales_optimos), "\n")
+
+mapa_optimos <- leaflet(data = datos_provinciales_optimos) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~Long, lat = ~Lat,
+    radius = 6,              # Tamaño del círculo
+    fillColor = "#228B22",   # Color de relleno verde oscuro (Forest Green)
+    color = "#006400",       # Color del borde verde más oscuro
+    weight = 1,              # Grosor del borde
+    opacity = 1,             # Opacidad del borde
+    fillOpacity = 0.8,       # Opacidad del relleno
+    popup = ~popup_html,
+    label = ~Provincia
+  ) |>
+  addControl(paste0("<h4>Provincias con Aptitud Agroclimática Alta (>", UMBRAL_OPTIMO, "%)</h4><small>Haz clic en los puntos para ver detalles.</small>"),
+             position = "topright", className = "info legend")
+
+# Guardar y mostrar
+saveWidget(mapa_optimos, "../outputs/graficos/mapas/mapa_provincias_optimas.html")
+mapa_optimos
