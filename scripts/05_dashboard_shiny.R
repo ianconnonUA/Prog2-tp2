@@ -144,14 +144,12 @@ cargar_datos_completa <- function() {
         datos_climaticos_limpios |> distinct(Nro, Nombre, Latitud, Longitud, Provincia), 
         by = c("Nro", "Nombre")
       ) |>
-      filter(!is.na(Provincia), !is.na(Latitud), !is.na(Longitud)) |>
       group_by(Nro, Nombre, Provincia, Latitud, Longitud) |>
       summarise(
         Dias_Helada_Tardia = sum(Temp_min <= 0 & month(Dia) %in% MESES_PRIMAVERA, na.rm = TRUE),
         Dias_Calor_Extremo = sum(Temp_max >= UMBRAL_CALOR, na.rm = TRUE),
         .groups = 'drop'
       ) |>
-      filter(Dias_Helada_Tardia <= 5, Dias_Calor_Extremo <= 20) |>
       arrange(Dias_Helada_Tardia)
     
     ranking_agro_mapa <- ranking_agro
@@ -597,7 +595,7 @@ server <- function(input, output, session) {
       mapa_data <- datos$ranking_agro_mapa %>% 
         filter(Provincia %in% input$filtro_provincia)
       variable <- mapa_data$Dias_Helada_Tardia
-      paleta <- "Purples"
+      paleta <- "Blues"
       titulo <- "Días Helada"
       reversa <- FALSE
     } else if (input$tipo_mapa == "sequia") {
